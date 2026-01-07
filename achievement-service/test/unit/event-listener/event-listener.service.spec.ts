@@ -161,7 +161,14 @@ describe('EventListenerService - Observer Pattern (TDD - RED Phase)', () => {
         timestamp: new Date('2024-01-01T11:00:00Z'), // Earlier timestamp
       };
 
-      achievementsService.findByRuleType.mockResolvedValue([]);
+      const achievement = {
+        id: 'ach-001',
+        ruleType: 'MONSTER_KILL_COUNT',
+        ruleConfig: { target: 10 },
+      };
+
+      achievementsService.findByRuleType.mockResolvedValue([achievement] as any);
+      playerAchievementsService.isAchievementUnlocked.mockResolvedValue(false);
       playerAchievementsService.evaluateAchievements.mockResolvedValue({ unlocked: false } as any);
 
       await service.handlePlayerEvent(event1);
@@ -178,6 +185,7 @@ describe('EventListenerService - Observer Pattern (TDD - RED Phase)', () => {
       };
 
       achievementsService.findByRuleType.mockResolvedValue([{ id: 'ach-001' }] as any);
+      playerAchievementsService.isAchievementUnlocked.mockResolvedValue(false);
       playerAchievementsService.evaluateAchievements.mockRejectedValue(
         new Error('Database connection lost'),
       );
@@ -228,8 +236,12 @@ describe('EventListenerService - Observer Pattern (TDD - RED Phase)', () => {
       };
 
       achievementsService.findByRuleType.mockResolvedValue([achievement] as any);
+      playerAchievementsService.isAchievementUnlocked.mockResolvedValue(false);
       playerAchievementsService.getPlayerProgress.mockResolvedValue({ progress: 3 } as any);
-      playerAchievementsService.evaluateAchievements.mockResolvedValue({ unlocked: false } as any);
+      playerAchievementsService.evaluateAchievements.mockResolvedValue({ 
+        unlocked: false, 
+        progress: 3 
+      } as any);
 
       await service.handlePlayerEvent(playerEvent);
 
