@@ -67,6 +67,7 @@ describe('EventListenerService - Reward Service (TDD - RED Phase)', () => {
         achievementEvent.playerId,
         'COINS',
         500,
+        undefined,
       );
     });
 
