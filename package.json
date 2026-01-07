@@ -1,0 +1,31 @@
+{
+  "name": "gaming-logros-recompensas-backend",
+  "version": "1.0.0",
+  "description": "Sistema backend de microservicios para Gaming: Logros y Recompensas",
+  "scripts": {
+    "install:all": "npm install --prefix player-service && npm install --prefix achievement-service && npm install --prefix reward-service",
+    "dev:player": "npm run start:dev --prefix player-service",
+    "dev:achievement": "npm run start:dev --prefix achievement-service",
+    "dev:reward": "npm run start:dev --prefix reward-service",
+    "build:all": "npm run build --prefix player-service && npm run build --prefix achievement-service && npm run build --prefix reward-service",
+    "test:all": "npm test --prefix player-service && npm test --prefix achievement-service && npm test --prefix reward-service",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker-compose down -v"
+  },
+  "keywords": [
+    "gaming",
+    "achievements",
+    "rewards",
+    "microservices",
+    "nestjs",
+    "typescript",
+    "rabbitmq",
+    "postgresql",
+    "docker"
+  ],
+  "author": "",
+  "license": "MIT"
+}

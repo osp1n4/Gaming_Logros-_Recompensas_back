@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  # ==================== DATABASES ====================
+  
+  postgres-players:
+    image: postgres:16-alpine
+    container_name: postgres-players
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: players_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-players-data:/var/lib/postgresql/data
+      - ./infrastructure/init-databases/01-init-players-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - gaming-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-achievements:
+    image: postgres:16-alpine
+    container_name: postgres-achievements
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: achievements_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-achievements-data:/var/lib/postgresql/data
+      - ./infrastructure/init-databases/02-init-achievements-db.sql:/docker-entrypoint-initdb.d/02-init.sql
+    networks:
+      - gaming-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-rewards:
+    image: postgres:16-alpine
+    container_name: postgres-rewards
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rewards_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-rewards-data:/var/lib/postgresql/data
+      - ./infrastructure/init-databases/03-init-rewards-db.sql:/docker-entrypoint-initdb.d/03-init.sql
+    networks:
+      - gaming-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== MESSAGE BROKER ====================
+  
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - gaming-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== MICROSERVICES ====================
+  
+  player-service:
+    build:
+      context: ./player-service
+      dockerfile: Dockerfile
+    container_name: player-service
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres-players
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: players_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: player.events
+      RABBITMQ_EXCHANGE_TYPE: fanout
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-players:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gaming-network
+    restart: unless-stopped
+
+  achievement-service:
+    build:
+      context: ./achievement-service
+      dockerfile: Dockerfile
+    container_name: achievement-service
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_HOST: postgres-achievements
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: achievements_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_QUEUE: achievement.player_actions
+      RABBITMQ_EXCHANGE: achievement.events
+      RABBITMQ_EXCHANGE_TYPE: topic
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres-achievements:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gaming-network
+    restart: unless-stopped
+
+  reward-service:
+    build:
+      context: ./reward-service
+      dockerfile: Dockerfile
+    container_name: reward-service
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      DB_HOST: postgres-rewards
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: rewards_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_QUEUE: reward.achievement_unlocked
+      RABBITMQ_EXCHANGE: reward.events
+      RABBITMQ_EXCHANGE_TYPE: topic
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres-rewards:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gaming-network
+    restart: unless-stopped
+
+# ==================== NETWORKS ====================
+
+networks:
+  gaming-network:
+    driver: bridge
+    name: gaming-network
+
+# ==================== VOLUMES ====================
+
+volumes:
+  postgres-players-data:
+    name: postgres-players-data
+  postgres-achievements-data:
+    name: postgres-achievements-data
+  postgres-rewards-data:
+    name: postgres-rewards-data
+  rabbitmq-data:
+    name: rabbitmq-data
