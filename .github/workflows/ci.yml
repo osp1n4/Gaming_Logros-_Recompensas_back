@@ -29,28 +29,37 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
       
-      - name: Run linter
-        run: npm run lint
+      - name: Install all microservices dependencies
+        run: |
+          cd player-service && npm ci && cd ..
+          cd achievement-service && npm ci && cd ..
+          cd reward-service && npm ci && cd ..
+      
+      - name: Run linter on all services
+        run: |
+          cd player-service && npm run lint && cd ..
+          cd achievement-service && npm run lint && cd ..
+          cd reward-service && npm run lint && cd ..
         continue-on-error: true
       
-      - name: Build project
-        run: npm run build
+      - name: Build all services
+        run: |
+          cd player-service && npm run build && cd ..
+          cd achievement-service && npm run build && cd ..
+          cd reward-service && npm run build && cd ..
       
-      - name: Run unit tests
-        run: npm test
+      - name: Run unit tests on all services
+        run: |
+          cd player-service && npm test && cd ..
+          cd achievement-service && npm test && cd ..
+          cd reward-service && npm test && cd ..
       
       - name: Generate test coverage
-        run: npm run test:coverage
-        continue-on-error: true
-      
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: matrix.node-version == '20.x'
-        with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
+        run: |
+          cd player-service && npm run test:cov && cd ..
+          cd achievement-service && npm run test:cov && cd ..
+          cd reward-service && npm run test:cov && cd ..
         continue-on-error: true
