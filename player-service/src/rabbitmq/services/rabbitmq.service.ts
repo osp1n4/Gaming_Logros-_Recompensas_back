@@ -34,9 +34,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
   async publishEvent(exchange: string, message: any): Promise<void> {
     try {
-      await this.channelWrapper.publish(exchange, '', message, {
-        persistent: true,
-      });
+      await this.channelWrapper.publish(exchange, '', message);
     } catch (error) {
       throw new Error(`Failed to publish event: ${error.message}`);
     }
@@ -49,45 +47,5 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     if (this.connection) {
       await this.connection.close();
     }
-  }
-}
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import * as amqp from 'amqplib';
-
-@Injectable()
-export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
-  private connection: amqp.Connection;
-  private channel: amqp.Channel;
-
-  async onModuleInit() {
-    try {
-      await this.connect();
-    } catch (error) {
-      console.error('Failed to connect to RabbitMQ:', error);
-    }
-  }
-
-  async onModuleDestroy() {
-    await this.disconnect();
-  }
-
-  async connect(): Promise<void> {
-    const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
-    this.connection = await amqp.connect(rabbitmqUrl);
-    this.channel = await this.connection.createChannel();
-  }
-
-  async disconnect(): Promise<void> {
-    if (this.channel) await this.channel.close();
-    if (this.connection) await this.connection.close();
-  }
-
-  async publishEvent(exchange: string, message: any): Promise<void> {
-    if (!this.channel) {
-      throw new Error('RabbitMQ connection failed');
-    }
-
-    await this.channel.assertExchange(exchange, 'fanout', { durable: true });
-    this.channel.publish(exchange, '', Buffer.from(JSON.stringify(message)));
   }
 }

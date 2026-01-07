@@ -35,37 +35,3 @@ export class PlayersRepository {
     return this.findById(id);
   }
 }
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Player } from '../entities/player.entity';
-
-@Injectable()
-export class PlayersRepository {
-  constructor(
-    @InjectRepository(Player)
-    private readonly playerRepository: Repository<Player>,
-  ) {}
-
-  async findById(id: string): Promise<Player | null> {
-    return await this.playerRepository.findOne({ where: { id } });
-  }
-
-  async findByUsername(username: string): Promise<Player | null> {
-    return await this.playerRepository.findOne({ where: { username } });
-  }
-
-  async findByEmail(email: string): Promise<Player | null> {
-    return await this.playerRepository.findOne({ where: { email } });
-  }
-
-  async create(playerData: any): Promise<Player> {
-    const player = this.playerRepository.create(playerData);
-    return await this.playerRepository.save(player);
-  }
-
-  async update(id: string, playerData: any): Promise<Player> {
-    await this.playerRepository.update(id, playerData);
-    return await this.findById(id);
-  }
-}

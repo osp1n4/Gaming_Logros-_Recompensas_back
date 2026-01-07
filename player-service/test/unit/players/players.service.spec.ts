@@ -120,7 +120,7 @@ describe('PlayersService (TDD - RED Phase)', () => {
     });
 
     it('should throw NotFoundException when player does not exist', async () => {
-      const playerId = 'non-existent-id';
+      const playerId = '123e4567-e89b-12d3-a456-426614174999';
       repository.findById.mockResolvedValue(null);
 
       await expect(service.getPlayerById(playerId)).rejects.toThrow(NotFoundException);
@@ -163,7 +163,7 @@ describe('PlayersService (TDD - RED Phase)', () => {
     });
 
     it('should throw NotFoundException when updating non-existent player', async () => {
-      const playerId = 'non-existent-id';
+      const playerId = '123e4567-e89b-12d3-a456-426614174999';
       repository.findById.mockResolvedValue(null);
 
       await expect(service.updatePlayerStats(playerId, { level: 10 })).rejects.toThrow(
