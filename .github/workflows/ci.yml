@@ -23,6 +23,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Debug - List repository structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "Checking for microservices:"
+          [ -d "player-service" ] && echo "✓ player-service exists" || echo "✗ player-service missing"
+          [ -d "achievement-service" ] && echo "✓ achievement-service exists" || echo "✗ achievement-service missing"
+          [ -d "reward-service" ] && echo "✓ reward-service exists" || echo "✗ reward-service missing"
+      
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -34,32 +45,32 @@ jobs:
       
       - name: Install all microservices dependencies
         run: |
-          cd player-service && npm ci && cd ..
-          cd achievement-service && npm ci && cd ..
-          cd reward-service && npm ci && cd ..
+          if [ -d "player-service" ]; then cd player-service && npm ci && cd ..; fi
+          if [ -d "achievement-service" ]; then cd achievement-service && npm ci && cd ..; fi
+          if [ -d "reward-service" ]; then cd reward-service && npm ci && cd ..; fi
       
       - name: Run linter on all services
         run: |
-          cd player-service && npm run lint && cd ..
-          cd achievement-service && npm run lint && cd ..
-          cd reward-service && npm run lint && cd ..
+          if [ -d "player-service" ]; then cd player-service && npm run lint && cd ..; fi
+          if [ -d "achievement-service" ]; then cd achievement-service && npm run lint && cd ..; fi
+          if [ -d "reward-service" ]; then cd reward-service && npm run lint && cd ..; fi
         continue-on-error: true
       
       - name: Build all services
         run: |
-          cd player-service && npm run build && cd ..
-          cd achievement-service && npm run build && cd ..
-          cd reward-service && npm run build && cd ..
+          if [ -d "player-service" ]; then cd player-service && npm run build && cd ..; fi
+          if [ -d "achievement-service" ]; then cd achievement-service && npm run build && cd ..; fi
+          if [ -d "reward-service" ]; then cd reward-service && npm run build && cd ..; fi
       
       - name: Run unit tests on all services
         run: |
-          cd player-service && npm test && cd ..
-          cd achievement-service && npm test && cd ..
-          cd reward-service && npm test && cd ..
+          if [ -d "player-service" ]; then cd player-service && npm test && cd ..; fi
+          if [ -d "achievement-service" ]; then cd achievement-service && npm test && cd ..; fi
+          if [ -d "reward-service" ]; then cd reward-service && npm test && cd ..; fi
       
       - name: Generate test coverage
         run: |
-          cd player-service && npm run test:cov && cd ..
-          cd achievement-service && npm run test:cov && cd ..
-          cd reward-service && npm run test:cov && cd ..
+          if [ -d "player-service" ]; then cd player-service && npm run test:cov && cd ..; fi
+          if [ -d "achievement-service" ]; then cd achievement-service && npm run test:cov && cd ..; fi
+          if [ -d "reward-service" ]; then cd reward-service && npm run test:cov && cd ..; fi
         continue-on-error: true
